@@ -1,32 +1,39 @@
 from flask import Flask, request, Response
 from flask_expects_json import expects_json
 from sqlalchemy import create_engine
-from pyspark.ml.classification import LogisticRegression, NaiveBayes
+from pyspark.ml.classification import NaiveBayes,NaiveBayesModel
 from sqlalchemy.orm import sessionmaker
 import json
 import pdb
 import log
-import classify
+from classify import train,load,predict,get_context
+from pyspark.sql import SparkSession
+from pyspark.ml.pipeline import PipelineModel
 
 app = Flask(__name__)
+global spark 
 
+@app.before_first_request
+def spark_session():
+    get_context()
+    try:
+        load()
+    except:
+        train()
 
 @app.route("/retrain")
 def retrain():
-    classify.train()
-    return Response(status=200)
-
+    try:
+        train()
+        return Response(status=200)
+    except: 
+        return Response(status=500)
 
 @app.route("/classify", methods=["POST"])
 def classify():
-    data = request.data
-    json_data = json.loads(data)
-    pdb.set_trace()
-    nb = NaiveBayes()
-    nb.load("modell")
-    
-    #nb.predictionCol()
-
+    data = request.get_json(force=True)
+    pred = predict(data)
+    return 'Benign' if pred == 0 else 'DDos'
 
 @app.route("/add", methods=["PUT"])
 def add():
@@ -42,8 +49,5 @@ def add():
         return Response(status=201)
     except:
         return Response(status=422)
-
-
-
 
 app.run(host="0.0.0.0", port=8080, debug=True)
