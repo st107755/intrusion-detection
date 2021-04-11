@@ -1,16 +1,21 @@
 import pdb
 from pyspark.sql import SparkSession,Row
-from pyspark.ml.classification import LogisticRegression, NaiveBayes
+from pyspark.ml.classification import LogisticRegression, NaiveBayes, LinearSVC
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit
 from pyspark.mllib.regression import StreamingLinearRegressionWithSGD
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from pyspark.ml.tuning import CrossValidator
 from pyspark.sql import functions as f
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from multiprocessing import Process
 import pandas as pd
+import log
 
 modell = None 
 spark = None 
+session = None
 features = [
     "tcp_srcport",
     "frame_len",
@@ -21,11 +26,17 @@ features = [
 
 def get_context():
     global spark
+    global session
+    ### Spark
     spark = (
         SparkSession.builder.appName("Python Spark SQL basic example")
         .config("spark.jars", "postgresql-42.2.19.jar")
         .getOrCreate()
     )
+    ### Database 
+    engine = create_engine("postgresql://admin:qwe123@localhost:5432/ddos", echo=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
 def train():
     global spark
@@ -37,8 +48,6 @@ def train():
         .option("password", "qwe123")
         .option("driver", "org.postgresql.Driver")
         .load()
-
-
     )
 
     ### Pre Processing ###
@@ -48,7 +57,7 @@ def train():
     df = assembler.transform(df)
 
     ### Classification ###
-    cl = NaiveBayes()
+    cl = LinearSVC()
     global model
     model = cl.fit(df)
     model.transform(df)
@@ -59,6 +68,18 @@ def load():
     cl = NaiveBayes()
     model = cl.load("modell")
 
+def add(data,prediction):
+    label = 'Benign' if prediction == 0 else 'DDos'
+    l = log.Log(data["tcp_srcport"],data["frame_len"],data["tcp_flags_push"],data["ip_flags_df"],data["byte"],label)
+    session.add(l)
+    session.commit()
+
+def suitable_for_learning(confidence):
+    confidence_factor = 2
+    if abs(confidence[0]-confidence[1]) > confidence_factor:
+        return True
+    return False
+
 def predict(data):
     global model
     values = list([tuple([int(x) for x in data.values()])])
@@ -66,4 +87,13 @@ def predict(data):
     df = spark.createDataFrame(values,keys)
     assembler = VectorAssembler(inputCols=features, outputCol="features")
     df = assembler.transform(df)
-    return model.predict(df.head().features)
+    prediction = model.predict(df.head().features)
+    ### Unsupervised Learning ###
+    confidence = model.predictRaw(df.head().features)
+    if suitable_for_learning(confidence):
+        process = Process(  # Create a daemonic process with heavy "my_func"
+        target=add(data,prediction),
+        daemon=True
+        )
+        process.start()
+    return prediction

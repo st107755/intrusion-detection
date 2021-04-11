@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Integer, Date, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 import datetime
-
+import pdb
 Base = declarative_base()
 
 
@@ -13,7 +13,7 @@ class Log(Base):
     frame_len = Column(Integer)
     tcp_flags_push = Column(Integer)
     ip_flags_df = Column(Integer)
-    frame_time = DateTime()
+    frame_time = Column(DateTime)
     byte = Column(Integer)
     label = Column(String)
     def __init__(
