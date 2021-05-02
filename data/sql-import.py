@@ -1,4 +1,5 @@
 import pandas as pd
+import sys
 import pdb
 
 df = pd.read_csv("APA-DDoS-Dataset.csv")
@@ -35,7 +36,10 @@ df.columns = [c.replace(".", "_") for c in df.columns]
 
 from sqlalchemy import create_engine
 
-engine = create_engine("postgresql://admin:qwe123@localhost:5432/ddos")
+if len(sys.argv) == 0:
+    engine = create_engine("postgresql://admin:qwe123@localhost:5432/ddos")
+else:
+    engine = create_engine("postgresql://admin:qwe123@db:5432/ddos")
 
 df.to_sql("ddos", con=engine, if_exists="replace", schema="public",index=False)
 with engine.connect() as con:
