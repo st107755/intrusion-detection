@@ -34,7 +34,7 @@ def get_context():
         .getOrCreate()
     )
     ### Database 
-    engine = create_engine("postgresql://admin:qwe123@localhost:5432/ddos", echo=True)
+    engine = create_engine("postgresql://admin:qwe123@db:5432/ddos", echo=True)
     Session = sessionmaker(bind=engine)
     session = Session()
 
@@ -42,7 +42,7 @@ def train():
     global spark
     df = (
         spark.read.format("jdbc")
-        .option("url", "jdbc:postgresql://localhost:5432/ddos")
+        .option("url", "jdbc:postgresql://db:5432/ddos")
         .option("dbtable", "ddos")
         .option("user", "admin")
         .option("password", "qwe123")

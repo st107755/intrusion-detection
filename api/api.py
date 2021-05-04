@@ -1,5 +1,4 @@
 from flask import Flask, request, Response
-from flask_expects_json import expects_json
 from pyspark.ml.classification import NaiveBayes,NaiveBayesModel
 import json
 import pdb
@@ -32,4 +31,5 @@ def classify():
     pred = predict(data)
     return 'Benign' if pred == 0 else 'DDos'
 
-app.run(host="0.0.0.0", port=8080, debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000, debug=True)

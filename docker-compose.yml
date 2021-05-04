@@ -15,6 +15,14 @@ services:
     image: ddos-setup
     depends_on:
         - "db"
-
+  api:
+    image: ddos-api 
+    restart: always
+    environment:
+        - SPARK_MODE=master
+    depends_on:
+        - "setup"
+    ports:
+        - "8000:8000"
   
 
