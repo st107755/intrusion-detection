@@ -1,7 +1,6 @@
 FROM debian:buster-slim
 COPY sql-import.py .
 COPY APA-DDoS-Dataset.csv .
-COPY wait-for-it.sh .
 RUN apt update 
 RUN apt install -y wget 
 RUN apt install -y python3

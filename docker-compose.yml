@@ -1,7 +1,6 @@
 version: '3.1'
 
 services:
-
   db:
     image: postgres
     restart: always
@@ -12,11 +11,11 @@ services:
     ports:
         - "5432:5432"
   setup:
-    image: ddos-setup
+    image: primefactor/ddos-setup
     depends_on:
         - "db"
   api:
-    image: ddos-api 
+    image: primefactor/ddos-api 
     restart: always
     environment:
         - SPARK_MODE=master
