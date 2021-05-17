@@ -31,6 +31,7 @@ def get_context():
     spark = (
         SparkSession.builder.appName("Python Spark SQL basic example")
         .config("spark.jars", "postgresql-42.2.19.jar")
+        .config("spark.worker.timeout","420")
         .getOrCreate()
     )
     ### Database 
@@ -58,6 +59,7 @@ def train():
 
     ### Classification ###
     cl = LinearSVC()
+    cl.setRegParam(0.1)
     global model
     model = cl.fit(df)
     model.transform(df)

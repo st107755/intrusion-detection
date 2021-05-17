@@ -1,3 +1,7 @@
 *.csv
 *.pyc
 /modell
+/api/modell
+/.ipynb_checkpoints
+/.vscode
+/__pycache__

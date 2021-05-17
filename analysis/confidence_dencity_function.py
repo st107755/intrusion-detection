@@ -41,7 +41,8 @@ for i in range (0,1000):
         row = df.rdd.take(random).pop().asDict()["features"]
         conf = model.predictRaw(row)
         diff = abs(conf[0]-conf[1])
-        print(diff)
+        print(conf)
+        # print(diff)
         confidence.append(diff)
     except:
         pass
